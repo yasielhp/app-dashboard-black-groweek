@@ -41,6 +41,15 @@ export interface ProductSales {
   name: string
   quantity: number
   revenue: number
+  statusBreakdown: {
+    completed: number
+    refunded: number
+    cancelled: number
+    pending: number
+    processing: number
+    onHold: number
+    failed: number
+  }
 }
 
 export interface OrderDetail {
@@ -50,6 +59,7 @@ export interface OrderDetail {
   customerName: string
   customerEmail: string
   coupon: string
+  status: string
   items: { sku: string; name: string; quantity: number }[]
 }
 
@@ -91,27 +101,72 @@ async function fetchWooCommerce(
 export async function getSalesData(
   period: "today" | "week" | "month" | "all" = "all"
 ): Promise<SalesData> {
-  const params: Record<string, string> = {
-    per_page: "100",
-    status: "completed",
-  }
-
   const now = new Date()
+  let afterDate: string | undefined
+
   if (period === "today") {
-    params.after = new Date(now.setHours(0, 0, 0, 0)).toISOString()
+    afterDate = new Date(now.setHours(0, 0, 0, 0)).toISOString()
   } else if (period === "week") {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    params.after = weekAgo.toISOString()
+    afterDate = weekAgo.toISOString()
   } else if (period === "month") {
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-    params.after = monthAgo.toISOString()
+    afterDate = monthAgo.toISOString()
   }
 
-  const orders: Order[] = await fetchWooCommerce("orders", params)
+  // Fetch all orders with all statuses
+  const statuses = ['completed', 'refunded', 'cancelled', 'pending', 'processing', 'on-hold', 'failed']
+  let allOrders: Order[] = []
+
+  for (const status of statuses) {
+    const params: Record<string, string> = {
+      per_page: "100",
+      status,
+    }
+
+    if (afterDate) {
+      params.after = afterDate
+    }
+
+    let page = 1
+    let hasMorePages = true
+
+    while (hasMorePages) {
+      const pageParams = { ...params, page: page.toString() }
+      const orders: Order[] = await fetchWooCommerce("orders", pageParams)
+
+      if (orders.length === 0) {
+        hasMorePages = false
+      } else {
+        allOrders = allOrders.concat(orders)
+        if (orders.length < 100) {
+          hasMorePages = false
+        } else {
+          page++
+        }
+      }
+    }
+  }
+
+  const orders = allOrders
 
   const salesMap = new Map<string, ProductSales>()
   TARGET_SKUS.forEach((sku) => {
-    salesMap.set(sku, { sku, name: sku, quantity: 0, revenue: 0 })
+    salesMap.set(sku, {
+      sku,
+      name: sku,
+      quantity: 0,
+      revenue: 0,
+      statusBreakdown: {
+        completed: 0,
+        refunded: 0,
+        cancelled: 0,
+        pending: 0,
+        processing: 0,
+        onHold: 0,
+        failed: 0,
+      },
+    })
   })
 
   let totalRevenue = 0
@@ -126,9 +181,24 @@ export async function getSalesData(
       if (TARGET_SKUS.includes(item.sku)) {
         hasTargetProduct = true
         const existing = salesMap.get(item.sku)!
-        existing.quantity += item.quantity
-        existing.revenue += parseFloat(item.total)
+
+        // Only count completed orders for main metrics
+        if (order.status === 'completed') {
+          existing.quantity += item.quantity
+          existing.revenue += parseFloat(item.total)
+        }
+
         existing.name = item.name
+
+        // Track all statuses
+        if (order.status === 'completed') existing.statusBreakdown.completed += item.quantity
+        else if (order.status === 'refunded') existing.statusBreakdown.refunded += item.quantity
+        else if (order.status === 'cancelled') existing.statusBreakdown.cancelled += item.quantity
+        else if (order.status === 'pending') existing.statusBreakdown.pending += item.quantity
+        else if (order.status === 'processing') existing.statusBreakdown.processing += item.quantity
+        else if (order.status === 'on-hold') existing.statusBreakdown.onHold += item.quantity
+        else if (order.status === 'failed') existing.statusBreakdown.failed += item.quantity
+
         salesMap.set(item.sku, existing)
         targetItems.push({
           sku: item.sku,
@@ -139,12 +209,15 @@ export async function getSalesData(
     })
 
     if (hasTargetProduct) {
-      totalOrders++
-      order.line_items.forEach((item) => {
-        if (TARGET_SKUS.includes(item.sku)) {
-          totalRevenue += parseFloat(item.total)
-        }
-      })
+      // Only count completed orders
+      if (order.status === 'completed') {
+        totalOrders++
+        order.line_items.forEach((item) => {
+          if (TARGET_SKUS.includes(item.sku)) {
+            totalRevenue += parseFloat(item.total)
+          }
+        })
+      }
 
       orderDetails.push({
         id: order.id,
@@ -155,6 +228,7 @@ export async function getSalesData(
           order.billing.email,
         customerEmail: order.billing.email,
         coupon: order.coupon_lines.map(c => c.code).join(', ') || '-',
+        status: order.status,
         items: targetItems,
       })
     }

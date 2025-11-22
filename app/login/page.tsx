@@ -39,9 +39,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#1D1D1C' }}>
       <div className="w-full max-w-md">
-        <div className="bg-gray-800 rounded-lg shadow-xl p-8">
+        <div className="rounded-lg shadow-xl p-8" style={{ backgroundColor: '#2C2B2B' }}>
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white">Black Groweek</h1>
             <p className="text-gray-400 mt-2">Dashboard de Ventas</p>
@@ -57,14 +57,19 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent"
+                style={{
+                  backgroundColor: '#1D1D1C',
+                  borderColor: '#3a3a39',
+                  '--tw-ring-color': '#F9512C'
+                } as React.CSSProperties}
                 placeholder="Ingresa la contraseña"
                 required
               />
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg text-sm">
+              <div className="border px-4 py-3 rounded-lg text-sm" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', color: '#ef4444' }}>
                 {error}
               </div>
             )}
@@ -72,7 +77,10 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              className="w-full text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ backgroundColor: '#F9512C' }}
+              onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = '#e0451f')}
+              onMouseLeave={(e) => !loading && (e.currentTarget.style.backgroundColor = '#F9512C')}
             >
               {loading ? 'Verificando...' : 'Acceder'}
             </button>
