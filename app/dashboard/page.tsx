@@ -6,14 +6,8 @@ import { useSalesStore } from "@/store/useSalesStore"
 
 export default function DashboardPage() {
   const router = useRouter()
-  const {
-    salesData,
-    period,
-    loading,
-    error,
-    fetchSales,
-    filterByPeriod,
-  } = useSalesStore()
+  const { salesData, period, loading, error, fetchSales, filterByPeriod } =
+    useSalesStore()
 
   const [sortBy, setSortBy] = useState<"name" | "sku" | "quantity" | "revenue">(
     "name"
@@ -103,8 +97,13 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    // Solo verificar autenticación, no cargar datos automáticamente
-    checkAuth()
+    const token = checkAuth()
+    if (!token) return
+
+    // Solo cargar datos si no hay datos persistidos (primera vez)
+    if (!salesData) {
+      handleFetchSales()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -282,19 +281,6 @@ export default function DashboardPage() {
                 onClick={handleLogout}
                 className="flex items-center cursor-pointer gap-2 px-4 py-2 text-gray-300 hover:text-white rounded-lg transition-all duration-200 bg-[#1D1D1C] hover:bg-[#3a3a39]"
               >
-                <svg
-                  className="w-4 h-4 sm:hidden"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
                 <span className="text-sm font-medium">Cerrar sesión</span>
               </button>
             </div>
@@ -441,31 +427,13 @@ export default function DashboardPage() {
                   disabled={loading}
                   className="backdrop-blur-sm w-full text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 border transition-all duration-200 shrink-0 bg-primary border-primary text-white shadow-[0_4px_14px_0_rgba(249,81,44,0.39)]"
                 >
-                  <svg
-                    className={`w-3.5 h-3.5 sm:hidden ${
-                      loading ? "animate-spin" : ""
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
                   <span className="w-full">
                     {loading ? "Actualizando..." : "Actualizar"}
                   </span>
                 </button>
-                <p className="text-gray-400 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 text-center px-3">
-                  <span className="text-gray-300  font-medium hidden sm:inline">
+                <p className="text-gray-400 text-xs w-full sm:text-sm flex items-center justify-center gap-1 sm:gap-2 text-center px-3">
+                  <span className="text-gray-300 font-medium ">
                     {formatDate(salesData.lastUpdated)}
-                  </span>
-                  <span className="text-gray-300 font-medium sm:hidden">
-                    {formatDate(salesData.lastUpdated).split(" ")[0]}
                   </span>
                 </p>
               </div>
