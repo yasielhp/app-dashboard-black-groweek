@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSalesStore } from "@/store/useSalesStore"
+import SalesCharts from "@/components/SalesCharts"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -852,6 +853,12 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+
+            {/* Gráficas de Análisis */}
+            <SalesCharts
+              orders={salesData.orders}
+              productSales={salesData.productSales}
+            />
 
             {/* Lista de Todos los Pedidos */}
             <div
