@@ -45,47 +45,57 @@ interface SalesData {
   };
 }
 
+type PeriodType = 'blackfriday' | 'cybermonday' | 'navidad' | 'all';
+
 interface SalesStore {
   allSalesData: SalesData | null;
   salesData: SalesData | null;
-  period: 'today' | 'week' | 'month' | 'all';
+  period: PeriodType;
   loading: boolean;
   error: string;
   setSalesData: (data: SalesData) => void;
-  setPeriod: (period: 'today' | 'week' | 'month' | 'all') => void;
+  setPeriod: (period: PeriodType) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string) => void;
   fetchSales: (token: string) => Promise<void>;
-  filterByPeriod: (period: 'today' | 'week' | 'month' | 'all') => void;
+  filterByPeriod: (period: PeriodType) => void;
 }
 
-const filterOrdersByPeriod = (orders: OrderDetail[], period: 'today' | 'week' | 'month' | 'all'): OrderDetail[] => {
-  // Fecha de inicio de la campaña: 13/11/2025
-  const campaignStartDate = new Date('2025-11-13T00:00:00');
+const filterOrdersByPeriod = (orders: OrderDetail[], period: PeriodType): OrderDetail[] => {
+  // Todas las fechas son de 00:00 a 23:59 (medianoche a medianoche)
 
-  // Primero filtrar por la fecha de inicio de la campaña
-  const campaignOrders = orders.filter(order => new Date(order.date) >= campaignStartDate);
+  // Definir rangos de fechas para cada período
+  const periodRanges: Record<PeriodType, { start: Date; end: Date }> = {
+    all: {
+      start: new Date('2025-11-13T00:00:00'),
+      end: new Date('2025-12-31T23:59:59'),
+    },
+    blackfriday: {
+      start: new Date('2025-11-13T00:00:00'),
+      end: new Date('2025-11-30T23:59:59'),
+    },
+    cybermonday: {
+      start: new Date('2025-12-01T00:00:00'),
+      end: new Date('2025-12-01T23:59:59'),
+    },
+    navidad: {
+      start: new Date('2025-12-02T00:00:00'),
+      end: new Date('2025-12-31T23:59:59'),
+    },
+  };
 
-  if (period === 'all') return campaignOrders;
+  const range = periodRanges[period];
 
-  const now = new Date();
-  let startDate: Date;
-
-  if (period === 'today') {
-    startDate = new Date(now.setHours(0, 0, 0, 0));
-  } else if (period === 'week') {
-    startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  } else {
-    startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  }
-
-  return campaignOrders.filter(order => new Date(order.date) >= startDate);
+  return orders.filter(order => {
+    const orderDate = new Date(order.date);
+    return orderDate >= range.start && orderDate <= range.end;
+  });
 };
 
-const calculateSalesData = (allOrders: OrderDetail[], period: 'today' | 'week' | 'month' | 'all', lastUpdated: string): SalesData => {
+const calculateSalesData = (allOrders: OrderDetail[], period: PeriodType, lastUpdated: string): SalesData => {
   const filteredOrders = filterOrdersByPeriod(allOrders, period);
 
-  // Fecha de inicio de la campaña: 13/11/2025
+  // Fecha de inicio de la campaña: 13/11/2025 a las 00:00
   const campaignStartDate = new Date('2025-11-13T00:00:00');
 
   // Inicializar salesMap con todos los SKUs que existen en allOrders desde la fecha de campaña

@@ -91,7 +91,7 @@ export default function DashboardPage() {
   }
 
   const handlePeriodChange = (
-    newPeriod: "today" | "week" | "month" | "all"
+    newPeriod: "blackfriday" | "cybermonday" | "navidad" | "all"
   ) => {
     filterByPeriod(newPeriod)
   }
@@ -113,41 +113,23 @@ export default function DashboardPage() {
     router.push("/login")
   }
 
-  const getDateRange = (period: "today" | "week" | "month" | "all"): string => {
-    const now = new Date()
-
+  const getDateRange = (
+    period: "blackfriday" | "cybermonday" | "navidad" | "all"
+  ): string => {
     if (period === "all") {
-      // Fecha de inicio fija: 13/11/2025
-      return `13/11/2025 - ${now.getDate()}/${
-        now.getMonth() + 1
-      }/${now.getFullYear()}`
+      return "13/11/2025 - 31/12/2025"
     }
 
-    if (period === "today") {
-      const day = now.getDate()
-      const month = now.getMonth() + 1
-      const year = now.getFullYear()
-      return `${day}/${month}/${year}`
+    if (period === "blackfriday") {
+      return "13/11/2025 - 30/11/2025"
     }
 
-    if (period === "week") {
-      const endDate = new Date(now)
-      const startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-      return `${startDate.getDate()}/${
-        startDate.getMonth() + 1
-      }/${startDate.getFullYear()} - ${endDate.getDate()}/${
-        endDate.getMonth() + 1
-      }/${endDate.getFullYear()}`
+    if (period === "cybermonday") {
+      return "01/12/2025"
     }
 
-    if (period === "month") {
-      const endDate = new Date(now)
-      const startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-      return `${startDate.getDate()}/${
-        startDate.getMonth() + 1
-      }/${startDate.getFullYear()} - ${endDate.getDate()}/${
-        endDate.getMonth() + 1
-      }/${endDate.getFullYear()}`
+    if (period === "navidad") {
+      return "02/12/2025 - 31/12/2025"
     }
 
     return ""
@@ -396,7 +378,9 @@ export default function DashboardPage() {
           <>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 justify-between">
               <div className="flex gap-1 sm:gap-2 backdrop-blur-sm rounded-xl p-1 border overflow-x-auto justify-between bg-[#2C2B2B] border-[#3a3a39]">
-                {(["all", "week", "today"] as const).map((p) => (
+                {(
+                  ["all", "blackfriday", "cybermonday", "navidad"] as const
+                ).map((p) => (
                   <button
                     key={p}
                     onClick={() => handlePeriodChange(p)}
@@ -408,8 +392,9 @@ export default function DashboardPage() {
                   >
                     <span className="font-bold">
                       {p === "all" && "Todo"}
-                      {p === "week" && "Últimos 7 días"}
-                      {p === "today" && "Hoy"}
+                      {p === "blackfriday" && "Black Friday"}
+                      {p === "cybermonday" && "Cyber Monday"}
+                      {p === "navidad" && "Navidad"}
                     </span>
                     <span
                       className={`text-xs sm:text-xs hidden sm:inline-block ${
