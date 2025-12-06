@@ -17,6 +17,7 @@ export default function DashboardPage() {
   const [showOrders, setShowOrders] = useState(false)
   const [filterBySku, setFilterBySku] = useState<string | null>(null)
   const [filterByStatus, setFilterByStatus] = useState<string | null>(null)
+  const [hideData, setHideData] = useState(false)
 
   const scrollToOrders = () => {
     const ordersSection = document.getElementById("orders-section")
@@ -137,10 +138,21 @@ export default function DashboardPage() {
   }
 
   const formatCurrency = (amount: number) => {
+    if (hideData) return "••••••"
     return new Intl.NumberFormat("es-ES", {
       style: "currency",
       currency: "EUR",
     }).format(amount)
+  }
+
+  const maskText = (text: string) => {
+    if (hideData) return "••••••••"
+    return text
+  }
+
+  const maskNumber = (num: number) => {
+    if (hideData) return "••"
+    return num
   }
 
   const formatDate = (dateString: string) => {
@@ -260,12 +272,58 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={handleLogout}
-                className="flex items-center cursor-pointer gap-2 px-4 py-2 text-gray-300 hover:text-white rounded-lg transition-all duration-200 bg-[#1D1D1C] hover:bg-[#3a3a39]"
-              >
-                <span className="text-sm font-medium">Cerrar sesión</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setHideData(!hideData)}
+                  className="flex items-center cursor-pointer gap-2 px-4 py-2 text-gray-300 hover:text-white rounded-lg transition-all duration-200 bg-[#1D1D1C] hover:bg-[#3a3a39]"
+                  title={hideData ? "Mostrar datos" : "Ocultar datos"}
+                >
+                  {hideData ? (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                      />
+                    </svg>
+                  )}
+                  <span className="text-sm font-medium hidden sm:inline">
+                    {hideData ? "Mostrar" : "Ocultar"}
+                  </span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center cursor-pointer gap-2 px-4 py-2 text-gray-300 hover:text-white rounded-lg transition-all duration-200 bg-[#1D1D1C] hover:bg-[#3a3a39]"
+                >
+                  <span className="text-sm font-medium">Cerrar sesión</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -481,10 +539,10 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <p className="text-xl sm:text-4xl font-bold text-blue-400">
-                  {Object.values(salesData.ordersByStatus || {}).reduce(
+                  {maskNumber(Object.values(salesData.ordersByStatus || {}).reduce(
                     (sum, count) => sum + count,
                     0
-                  )}
+                  ))}
                 </p>
               </div>
 
@@ -513,7 +571,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <p className="text-xl sm:text-4xl font-bold text-primary">
-                  {salesData.ordersByStatus?.completed || 0}
+                  {maskNumber(salesData.ordersByStatus?.completed || 0)}
                 </p>
               </div>
 
@@ -542,7 +600,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <p className="text-xl sm:text-4xl font-bold text-blue-400">
-                  {salesData.ordersByStatus?.processing || 0}
+                  {maskNumber(salesData.ordersByStatus?.processing || 0)}
                 </p>
               </div>
 
@@ -571,7 +629,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <p className="text-xl sm:text-4xl font-bold text-yellow-400">
-                  {salesData.ordersByStatus?.pending || 0}
+                  {maskNumber(salesData.ordersByStatus?.pending || 0)}
                 </p>
               </div>
 
@@ -600,7 +658,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <p className="text-xl sm:text-4xl font-bold text-red-400">
-                  {salesData.ordersByStatus?.refunded || 0}
+                  {maskNumber(salesData.ordersByStatus?.refunded || 0)}
                 </p>
               </div>
 
@@ -629,7 +687,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <p className="text-xl sm:text-4xl font-bold text-orange-400">
-                  {salesData.ordersByStatus?.cancelled || 0}
+                  {maskNumber(salesData.ordersByStatus?.cancelled || 0)}
                 </p>
               </div>
 
@@ -658,7 +716,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <p className="text-xl sm:text-4xl font-bold text-red-300">
-                  {salesData.ordersByStatus?.failed || 0}
+                  {maskNumber(salesData.ordersByStatus?.failed || 0)}
                 </p>
               </div>
             </div>
@@ -756,7 +814,7 @@ export default function DashboardPage() {
                             </span>
                           </div>
                           <span className="text-xl font-bold text-primary">
-                            {product.statusBreakdown.completed}
+                            {maskNumber(product.statusBreakdown.completed)}
                           </span>
                         </div>
                       </div>
@@ -778,7 +836,7 @@ export default function DashboardPage() {
                                   Reembolsados
                                 </span>
                                 <span className="text-red-400 font-semibold">
-                                  {product.statusBreakdown.refunded}
+                                  {maskNumber(product.statusBreakdown.refunded)}
                                 </span>
                               </div>
                             )}
@@ -788,7 +846,7 @@ export default function DashboardPage() {
                                   Cancelados
                                 </span>
                                 <span className="text-orange-400 font-semibold">
-                                  {product.statusBreakdown.cancelled}
+                                  {maskNumber(product.statusBreakdown.cancelled)}
                                 </span>
                               </div>
                             )}
@@ -798,7 +856,7 @@ export default function DashboardPage() {
                                   Pendientes
                                 </span>
                                 <span className="text-yellow-400 font-semibold">
-                                  {product.statusBreakdown.pending}
+                                  {maskNumber(product.statusBreakdown.pending)}
                                 </span>
                               </div>
                             )}
@@ -808,7 +866,7 @@ export default function DashboardPage() {
                                   Procesando
                                 </span>
                                 <span className="text-blue-300 font-semibold">
-                                  {product.statusBreakdown.processing}
+                                  {maskNumber(product.statusBreakdown.processing)}
                                 </span>
                               </div>
                             )}
@@ -816,7 +874,7 @@ export default function DashboardPage() {
                               <div className="flex justify-between items-center px-2 py-1.5 bg-purple-500/5 rounded-lg">
                                 <span className="text-gray-400">En espera</span>
                                 <span className="text-purple-400 font-semibold">
-                                  {product.statusBreakdown.onHold}
+                                  {maskNumber(product.statusBreakdown.onHold)}
                                 </span>
                               </div>
                             )}
@@ -824,7 +882,7 @@ export default function DashboardPage() {
                               <div className="flex justify-between items-center px-2 py-1.5 bg-red-700/5 rounded-lg">
                                 <span className="text-gray-400">Fallidos</span>
                                 <span className="text-red-300 font-semibold">
-                                  {product.statusBreakdown.failed}
+                                  {maskNumber(product.statusBreakdown.failed)}
                                 </span>
                               </div>
                             )}
@@ -994,7 +1052,7 @@ export default function DashboardPage() {
                         >
                           <td className="px-3 sm:px-6 py-3 sm:py-5 text-xs sm:text-sm">
                             <span className="font-mono font-medium text-primary">
-                              #{order.id}
+                              #{hideData ? "••••" : order.id}
                             </span>
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-5 text-xs sm:text-sm">
@@ -1008,10 +1066,10 @@ export default function DashboardPage() {
                           <td className="px-3 sm:px-6 py-3 sm:py-5 text-xs sm:text-sm">
                             <div>
                               <div className="font-medium text-white text-[10px] sm:text-sm truncate max-w-[120px] sm:max-w-none">
-                                {order.customerName}
+                                {maskText(order.customerName)}
                               </div>
                               <div className="text-[9px] sm:text-xs text-gray-400 break-all mt-0.5 truncate max-w-[120px] sm:max-w-none">
-                                {order.customerEmail}
+                                {maskText(order.customerEmail)}
                               </div>
                             </div>
                           </td>
@@ -1132,14 +1190,14 @@ export default function DashboardPage() {
                         <tbody className="divide-y divide-gray-700">
                           {filteredOrders.map((order) => (
                             <tr key={order.id} className="hover:bg-gray-700/30">
-                              <td className="px-4 py-4 text-sm">#{order.id}</td>
+                              <td className="px-4 py-4 text-sm">#{hideData ? "••••" : order.id}</td>
                               <td className="px-4 py-4 text-sm text-gray-400">
                                 {formatDate(order.date)}
                               </td>
                               <td className="px-4 py-4 text-sm">
-                                <div>{order.customerName}</div>
+                                <div>{maskText(order.customerName)}</div>
                                 <div className="text-xs text-gray-400 break-all">
-                                  {order.customerEmail}
+                                  {maskText(order.customerEmail)}
                                 </div>
                               </td>
                               <td className="px-4 py-4 text-sm">
